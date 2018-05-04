@@ -4,11 +4,10 @@
 
 #include "OutputHandler.hpp"
 
-OutputHandler::OutputHandler(ObjectFactoryPtr factory)
+OutputHandler::OutputHandler()
 : QGroupBox(tr("Output view"))
 , chartView_(new QWebEngineView)
 , outputTextView_(new QTextEdit)
-, factory_(factory)
 , mainLayout_(new QGridLayout)
 {
     configure();

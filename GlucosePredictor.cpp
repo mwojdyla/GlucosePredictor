@@ -1,6 +1,5 @@
 #include "ConfigurationHandler.hpp"
 #include "GlucosePredictor.hpp"
-#include "ObjectFactory.hpp"
 #include "OutputHandler.hpp"
 #include "ui_GlucosePredictor.h"
 
@@ -45,10 +44,9 @@ int GlucosePredictor::chartNumber = 1;
 GlucosePredictor::GlucosePredictor(QWidget *parent)
 : QWidget(parent)
 , ui(new Ui::GlucosePredictor)
-, objectFactory_(new ObjectFactory)
 , mainLayout_(new QGridLayout)
-, outputBox_(new OutputHandler(objectFactory_))
-, configurationBox_(new ConfigurationHandler(objectFactory_))
+, outputBox_(new OutputHandler)
+, configurationBox_(new ConfigurationHandler)
 , predictionAlgorithmTask(new QProcess)
 {
 //    ui->setupUi(this);

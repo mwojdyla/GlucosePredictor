@@ -4,8 +4,6 @@
 #include <QGroupBox>
 #include <QProcess>
 
-#include "ObjectFactory.hpp"
-
 class QDoubleSpinBox;
 class QFormLayout;
 class QGridLayout;
@@ -19,7 +17,7 @@ class ConfigurationHandler : public QGroupBox
     Q_OBJECT
 
 public:
-    explicit ConfigurationHandler(ObjectFactoryPtr factory);
+    explicit ConfigurationHandler();
     ~ConfigurationHandler();
 
     QGroupBox* buttonsBox_;
@@ -55,7 +53,6 @@ private:
     void createParametersBox();
     void setParametersLayout(QFormLayout* const layout) const;
 
-    ObjectFactoryPtr factory_;
     QGridLayout* const mainLayout_;
 };
 
