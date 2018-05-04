@@ -3,8 +3,6 @@
 
 #include <QGroupBox>
 
-#include "ObjectFactory.hpp"
-
 class QGridLayout;
 class QTextEdit;
 class QWebEngineView;
@@ -14,7 +12,7 @@ class OutputHandler : public QGroupBox
     Q_OBJECT
 
 public:
-    explicit OutputHandler(ObjectFactoryPtr factory);
+    explicit OutputHandler();
     ~OutputHandler();
 
     QWebEngineView* chartView_;
@@ -22,7 +20,6 @@ public:
 private:
     void configure();
 
-    ObjectFactoryPtr factory_;
     QGridLayout* mainLayout_;
 };
 

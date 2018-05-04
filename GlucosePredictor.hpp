@@ -1,11 +1,8 @@
 #ifndef GLUCOSEPREDICTOR_HPP
 #define GLUCOSEPREDICTOR_HPP
 
-#include <memory>
-#include <utility>
 #include <QWidget>
 
-class ObjectFactory;
 class OutputHandler;
 class ConfigurationHandler;
 class QGridLayout;
@@ -43,7 +40,6 @@ private:
     void displayChart() const;
 
     Ui::GlucosePredictor *ui;
-    const ObjectFactory* const objectFactory_;
     QGridLayout* mainLayout_;
     OutputHandler* outputBox_;
     ConfigurationHandler* configurationBox_;

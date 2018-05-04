@@ -9,9 +9,8 @@
 
 #include "ConfigurationHandler.hpp"
 
-ConfigurationHandler::ConfigurationHandler(ObjectFactoryPtr factory)
+ConfigurationHandler::ConfigurationHandler()
 : QGroupBox(tr("Configuration view"))
-, factory_(factory)
 , mainLayout_(new QGridLayout)
 {
     configure();

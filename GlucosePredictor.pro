@@ -17,12 +17,10 @@ TEMPLATE = app
 SOURCES += main.cpp\
         GlucosePredictor.cpp \
     ConfigurationHandler.cpp \
-    OutputHandler.cpp \
-    ObjectFactory.cpp
+    OutputHandler.cpp
 
 HEADERS  += GlucosePredictor.hpp \
     ConfigurationHandler.hpp \
-    OutputHandler.hpp \
-    ObjectFactory.hpp
+    OutputHandler.hpp
 
 FORMS    += GlucosePredictor.ui
