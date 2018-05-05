@@ -93,7 +93,7 @@ void ConfigurationHandler::createParametersBox()
     learningRate_->setSingleStep(0.1);
 
     samples_->setValue(1000);
-    folds_->setValue(20);
+    folds_->setValue(5);
     rows_->setValue(4);
     columns_->setValue(5);
     epochs_->setValue(100);
