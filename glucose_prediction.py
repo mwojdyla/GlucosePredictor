@@ -134,7 +134,7 @@ class Node(object):
 class DataManager(object):
 
     def __init__(self):
-        self.file_path = '/home/mateo/Repos/DiplomaProjectDesktopApplication/GlucosePredictor/CGM.csv'
+        self.file_path = '{}/CGM.csv'.format(os.path.abspath(os.path.dirname(__file__)))
 
     def load_data(self):
         raw_data = self.load_csv(self.file_path)
@@ -179,7 +179,7 @@ class DataManager(object):
 class ChartPlotter(object):
 
     def __init__(self):
-        self.plots_dir = '/home/mateo/Repos/DiplomaProjectDesktopApplication/GlucosePredictor/plots'
+        self.plots_dir = '{}/plots'.format(os.path.abspath(os.path.dirname(__file__)))
         self.clean_plots_directory()
 
     def clean_plots_directory(self):

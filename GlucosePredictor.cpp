@@ -24,21 +24,21 @@
 namespace
 {
 
-std::string designateDirFullPath()
+std::string designateSourceDirPath()
 {
-    QString appDirPath = QDir::currentPath();
-    int lastSlashPos = appDirPath.lastIndexOf(QChar('/'));
-    QString cuttedDirPath = appDirPath.left(lastSlashPos + 1);
-    cuttedDirPath.append("GlucosePredictor/");
+    QString buildDirPath = QDir::currentPath();
+    int lastSlashPos = buildDirPath.lastIndexOf(QChar('/'));
+    QString sourceDirPath = buildDirPath.left(lastSlashPos + 1);
 
-    return cuttedDirPath.toUtf8().constData();
+    return sourceDirPath.toUtf8().constData();
 }
 
+const std::string sourceDirPath = designateSourceDirPath();
+const std::string plotsDirPath = "file://" + sourceDirPath + "plots/";
+const std::string scriptPath = sourceDirPath + "glucose_prediction.py";
+
 }
 
-const std::string fullPath = designateDirFullPath();
-const std::string scriptName = fullPath + "glucose_prediction.py";
-const std::string plotsDirFullPath = "file://" + fullPath + "plots/";
 int GlucosePredictor::chartNumber = 1;
 
 GlucosePredictor::GlucosePredictor(QWidget *parent)
@@ -187,7 +187,7 @@ void GlucosePredictor::runScript() const
 QString GlucosePredictor::makeScriptInvocation() const
 {
     std::string language = "python3 ";
-    std::string scriptInvocation = language + scriptName;
+    std::string scriptInvocation = language + scriptPath;
 
     concatenateOptionsWithValues(scriptInvocation);
 
@@ -209,7 +209,7 @@ void GlucosePredictor::concatenateOptionsWithValues(std::string& invocation) con
 
 void GlucosePredictor::displayChart() const
 {
-    std::string chartPath = plotsDirFullPath + "plot" + std::to_string(chartNumber) + ".html";
+    std::string chartPath = plotsDirPath + "plot" + std::to_string(chartNumber) + ".html";
     outputBox_->chartView_->load(QUrl(tr(chartPath.c_str())));
 }
 
