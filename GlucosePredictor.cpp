@@ -93,6 +93,7 @@ void GlucosePredictor::onRunButtonClicked() const
 {
     if (parametersAreValid())
     {
+        GlucosePredictor::chartNumber = 1;
         configurationBox_->infoTable_->clear();
         configurationBox_->infoTable_->setText(tr("Computing..."));
         runScript();
