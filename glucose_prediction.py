@@ -103,7 +103,8 @@ class NodesLattice(object):
         return current_node
 
     def count_radius(self):
-        return max(self.rows, self.columns) // 2  # sigma zero
+        radius = max(self.rows, self.columns) / 2  # sigma zero
+        return radius if radius > 1 else 1.1
 
 
 class Node(object):
@@ -292,7 +293,6 @@ def main():
     manager = DataManager()
     plotter = ChartPlotter()
     statistic_provider = StatisticProvider()
-    network = KohonenNetwork(rows, columns)  # Consider if network should be constructed inside a loop
 
     dataset = manager.load_data()
     dataset = dataset[:data_limit]
@@ -307,6 +307,7 @@ def main():
         training_set = sum(training_set, [])
         testing_set = fold
 
+        network = KohonenNetwork(rows, columns)
         network.train(training_set, epochs, initial_learning_rate)
 
         actual_values = [record['sugar'] for record in fold]
