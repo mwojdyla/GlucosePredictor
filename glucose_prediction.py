@@ -1,14 +1,17 @@
+#  REMEMBER TO SET CREDENTIALS FILE IN PLOTLY FOR ONLINE PLOTTING
+import datetime
+import numpy as np
+import os
+import plotly
+
 from argparse import ArgumentParser
 from csv import reader
 from math import exp, log
 from operator import itemgetter
 from plotly import graph_objs as go
+from plotly import plotly as py
 from plotly.offline import plot
 from random import seed, random, randint, randrange
-
-import datetime
-import numpy as np
-import os
 
 
 class KohonenNetwork(object):
@@ -181,6 +184,7 @@ class ChartPlotter(object):
 
     def __init__(self):
         self.plots_dir = '{}/plots'.format(os.path.abspath(os.path.dirname(__file__)))
+        self.images_dir = '{}/images'.format(os.path.abspath(os.path.dirname(__file__)))
         self.clean_plots_directory()
 
     def clean_plots_directory(self):
@@ -190,12 +194,25 @@ class ChartPlotter(object):
             os.remove(os.path.join(self.plots_dir, file))
 
     def plot_chart(self, data_fold, actual_values, predicted_values, plot_number):
+        traces = self.make_traces(data_fold, actual_values, predicted_values)
+        layout = self.make_layout_for_offline_plotting(plot_number)
+        fig = dict(data=traces, layout=layout)
+        plot(fig, filename='{0}/plot{1}.html'.format(self.plots_dir, plot_number), auto_open=False)
+
+    def plot_chart_online(self, data_fold, actual_values, predicted_values, plot_number):
+        traces = self.make_traces(data_fold, actual_values, predicted_values)
+        layout = self.make_layout_for_online_plotting(plot_number)
+        fig = go.Figure(data=traces, layout=layout)
+        py.image.save_as(fig, filename='{0}/plot_image{1}.png'.format(self.images_dir, plot_number))
+
+    @staticmethod
+    def make_traces(data_fold, actual_values, predicted_values):
         dates = [sample['date'].strftime('%m/%d/%Y %H:%M:%S') for sample in data_fold]
 
         continuous_trace = go.Scatter(
             x=dates,
             y=actual_values,
-            name='Actual values',
+            name='Actual value',
             line=dict(
                 color='rgb(205, 12, 24)',
                 width=4)
@@ -203,21 +220,34 @@ class ChartPlotter(object):
         dotted_trace = go.Scatter(
             x=dates,
             y=predicted_values,
-            name='Predicted values',
+            name='Predicted value',
             line=dict(
                 color='rgb(22, 96, 167)',
                 width=4,
                 dash='dot')
         )
-        traces = [continuous_trace, dotted_trace]
+        return [continuous_trace, dotted_trace]
 
-        layout = dict(title='Prediction of blood sugar level\n(Fold {})'.format(plot_number),
-                      xaxis=dict(title='Date'),
-                      yaxis=dict(title='Blood sugar level [mg/dL]'),
-                      )
+    @staticmethod
+    def make_layout_for_online_plotting(plot_number):
+        return go.Layout(
+            title='Prediction of blood sugar level\n(Fold {})'.format(plot_number),
+            xaxis=dict(title='Date'),
+            yaxis=dict(title='Blood sugar level [mg/dL]'),
+            autosize=False,
+            width=1500,
+            height=600,
+            legend=dict(font=dict(size=14))
+        )
 
-        fig = dict(data=traces, layout=layout)
-        plot(fig, filename='{0}/plot{1}.html'.format(self.plots_dir, plot_number), auto_open=False)
+    @staticmethod
+    def make_layout_for_offline_plotting(plot_number):
+        return dict(
+            title='Prediction of blood sugar level\n(Fold {})'.format(plot_number),
+            xaxis=dict(title='Date'),
+            yaxis=dict(title='Blood sugar level [mg/dL]'),
+            legend=dict(font=dict(size=14))
+        )
 
 
 class StatisticProvider(object):
@@ -314,7 +344,8 @@ def main():
         predicted_values = network.predict(testing_set)
         statistic_provider.print_differences_between_values(actual_values, predicted_values, counter)
 
-        plotter.plot_chart(testing_set, actual_values, predicted_values, counter)
+        # plotter.plot_chart(testing_set, actual_values, predicted_values, counter)
+        plotter.plot_chart_online(testing_set, actual_values, predicted_values, counter)
         counter += 1
 
         accuracy = statistic_provider.count_mean_absolute_percentage_error(actual_values, predicted_values)
