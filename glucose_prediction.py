@@ -294,7 +294,15 @@ class StatisticProvider(object):
             tablefmt='latex',
             numalign='center'
         )
-        return latex_table
+        return StatisticProvider.modify_table_content(latex_table)
+
+    @staticmethod
+    def modify_table_content(latex_table):
+        modified_table = latex_table.replace('ccc', '|c|c|c|')
+        modified_table = modified_table.replace('Actual values [mg/dL]', '\\textbf{Actual values [mg/dL]}')
+        modified_table = modified_table.replace('Predicted values [mg/dL]', '\\textbf{Predicted values [mg/dL]}')
+        modified_table = modified_table.replace('Sample number', '\\textbf{Sample number}')
+        return modified_table
 
 
 def create_option_parser():
