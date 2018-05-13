@@ -167,6 +167,9 @@ class DataManager(object):
 
     @staticmethod
     def cross_validate_data(dataset, folds_number):
+        if folds_number < 2:
+            raise Exception('Invalid number of folds occured!')
+
         dataset_split = list()
         dataset_copy = list(dataset)
         fold_size = int(len(dataset) / folds_number)
@@ -368,7 +371,7 @@ def main():
         network = KohonenNetwork(rows, columns)
         network.train(training_set, epochs, initial_learning_rate)
 
-        actual_values = [record['sugar'] for record in fold]
+        actual_values = [record['sugar'] for record in testing_set]
         predicted_values = network.predict(testing_set)
         statistic_provider.print_differences_between_values(actual_values, predicted_values, counter)
 
