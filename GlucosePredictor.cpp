@@ -143,11 +143,11 @@ bool GlucosePredictor::parametersAreValid() const
         configurationBox_->infoTable_->append(
             tr("*Samples' number must be different than zero!"));
     }
-    if (configurationBox_->folds_->value() == 0)
+    if (configurationBox_->folds_->value() < 2)
     {
         areValid = false;
         configurationBox_->infoTable_->append(
-            tr("*Folds' number must be different than zero!"));
+            tr("*Folds' number must be at least 2!"));
     }
     if (configurationBox_->rows_->value() == 0)
     {
