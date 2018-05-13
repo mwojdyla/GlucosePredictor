@@ -12,6 +12,7 @@ from plotly import graph_objs as go
 from plotly import plotly as py
 from plotly.offline import plot
 from random import seed, random, randint, randrange
+from tabulate import tabulate
 
 
 class KohonenNetwork(object):
@@ -276,6 +277,33 @@ class StatisticProvider(object):
             print('  Fold {:<2}: {:.2f}%'.format(i + 1, scores[i]))
         print('Mean accuracy: {:.2f}%'.format(100 - sum(scores) / float(len(scores))))
 
+    @staticmethod
+    def generate_latex_table(actual_values, predicted_values):
+        actual_val_key = 'Actual values [mg/dL]'
+        predicted_val_key = 'Predicted values [mg/dL]'
+        sample_num_key = 'Sample number'
+        sample_numbers = list(range(1, len(actual_values) + 1))
+
+        latex_table = tabulate(
+            {
+                sample_num_key: sample_numbers,
+                actual_val_key: actual_values,
+                predicted_val_key: predicted_values
+            },
+            headers='keys',
+            tablefmt='latex',
+            numalign='center'
+        )
+        return StatisticProvider.modify_table_content(latex_table)
+
+    @staticmethod
+    def modify_table_content(latex_table):
+        modified_table = latex_table.replace('ccc', '|c|c|c|')
+        modified_table = modified_table.replace('Actual values [mg/dL]', '\\textbf{Actual values [mg/dL]}')
+        modified_table = modified_table.replace('Predicted values [mg/dL]', '\\textbf{Predicted values [mg/dL]}')
+        modified_table = modified_table.replace('Sample number', '\\textbf{Sample number}')
+        return modified_table
+
 
 def create_option_parser():
     parser = ArgumentParser()
@@ -344,14 +372,15 @@ def main():
         predicted_values = network.predict(testing_set)
         statistic_provider.print_differences_between_values(actual_values, predicted_values, counter)
 
-        # plotter.plot_chart(testing_set, actual_values, predicted_values, counter)
-        plotter.plot_chart_online(testing_set, actual_values, predicted_values, counter)
+        plotter.plot_chart(testing_set, actual_values, predicted_values, counter)
+        # plotter.plot_chart_online(testing_set, actual_values, predicted_values, counter)
         counter += 1
 
         accuracy = statistic_provider.count_mean_absolute_percentage_error(actual_values, predicted_values)
         scores.append(accuracy)
 
     statistic_provider.print_statistics(scores)
+    print(statistic_provider.generate_latex_table(actual_values, predicted_values))
 
 
 if __name__ == '__main__':
