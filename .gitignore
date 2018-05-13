@@ -6,3 +6,7 @@ build/
 
 # ignore images directory
 images/
+
+#ignore latex_tables directory
+latex_tables/
+

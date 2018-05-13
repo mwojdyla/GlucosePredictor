@@ -257,7 +257,19 @@ class ChartPlotter(object):
 class StatisticProvider(object):
 
     def __init__(self):
-        pass
+        self.latex_tables_dir = '{}/latex_tables'.format(os.path.abspath(os.path.dirname(__file__)))
+        self.clean_latex_tables_directory()
+
+    def clean_latex_tables_directory(self):
+        file_list = [file for file in os.listdir(self.latex_tables_dir) if file.endswith('.txt')]
+
+        for file in file_list:
+            os.remove(os.path.join(self.latex_tables_dir, file))
+
+    def write_table_to_file(self, table, fold_number):
+        file_name = '{0}/table{1}.txt'.format(self.latex_tables_dir, fold_number)
+        with open(file_name, 'w') as txt_file:
+            txt_file.write(table)
 
     @staticmethod
     def count_mean_absolute_percentage_error(actual_values, predicted_values):
@@ -377,13 +389,15 @@ def main():
 
         plotter.plot_chart(testing_set, actual_values, predicted_values, counter)
         # plotter.plot_chart_online(testing_set, actual_values, predicted_values, counter)
-        counter += 1
+
+        latex_table = statistic_provider.generate_latex_table(actual_values, predicted_values)
+        statistic_provider.write_table_to_file(latex_table, counter)
 
         accuracy = statistic_provider.count_mean_absolute_percentage_error(actual_values, predicted_values)
         scores.append(accuracy)
+        counter += 1
 
     statistic_provider.print_statistics(scores)
-    print(statistic_provider.generate_latex_table(actual_values, predicted_values))
 
 
 if __name__ == '__main__':
