@@ -257,19 +257,7 @@ class ChartPlotter(object):
 class StatisticProvider(object):
 
     def __init__(self):
-        self.latex_tables_dir = '{}/latex_tables'.format(os.path.abspath(os.path.dirname(__file__)))
-        self.clean_latex_tables_directory()
-
-    def clean_latex_tables_directory(self):
-        file_list = [file for file in os.listdir(self.latex_tables_dir) if file.endswith('.txt')]
-
-        for file in file_list:
-            os.remove(os.path.join(self.latex_tables_dir, file))
-
-    def write_table_to_file(self, table, fold_number):
-        file_name = '{0}/table{1}.txt'.format(self.latex_tables_dir, fold_number)
-        with open(file_name, 'w') as txt_file:
-            txt_file.write(table)
+        pass
 
     @staticmethod
     def count_mean_absolute_percentage_error(actual_values, predicted_values):
@@ -292,14 +280,45 @@ class StatisticProvider(object):
             print('  Fold {:<2}: {:.2f}%'.format(i + 1, scores[i]))
         print('Mean accuracy: {:.2f}%'.format(100 - sum(scores) / float(len(scores))))
 
+
+class TableGenerator(object):
+
+    def __init__(self):
+        self.latex_tables_dir = '{}/latex_tables'.format(os.path.abspath(os.path.dirname(__file__)))
+        self.latex_table_template = \
+            '''
+            \\begin{table}[]
+            \centering
+            tabular_content
+            \caption{My caption}
+            \end{table}
+            '''
+        self.clean_latex_tables_directory()
+
+    def clean_latex_tables_directory(self):
+        file_list = [file for file in os.listdir(self.latex_tables_dir) if file.endswith('.txt')]
+
+        for file in file_list:
+            os.remove(os.path.join(self.latex_tables_dir, file))
+
+    def make_latex_table(self, actual_values, predicted_values, fold_number):
+        content = self.generate_tabular_content(actual_values, predicted_values)
+        self.latex_table_template = self.latex_table_template.replace('tabular_content', content)
+        self.write_table_to_file(fold_number)
+
+    def write_table_to_file(self, fold_number):
+        file_name = '{0}/table{1}.txt'.format(self.latex_tables_dir, fold_number)
+        with open(file_name, 'w') as txt_file:
+            txt_file.write(self.latex_table_template)
+
     @staticmethod
-    def generate_latex_table(actual_values, predicted_values):
+    def generate_tabular_content(actual_values, predicted_values):
         actual_val_key = 'Actual values [mg/dL]'
         predicted_val_key = 'Predicted values [mg/dL]'
         sample_num_key = 'Sample number'
         sample_numbers = list(range(1, len(actual_values) + 1))
 
-        latex_table = tabulate(
+        latex_tabular = tabulate(
             {
                 sample_num_key: sample_numbers,
                 actual_val_key: actual_values,
@@ -309,7 +328,7 @@ class StatisticProvider(object):
             tablefmt='latex',
             numalign='center'
         )
-        return StatisticProvider.modify_table_content(latex_table)
+        return TableGenerator.modify_table_content(latex_tabular)
 
     @staticmethod
     def modify_table_content(latex_table):
@@ -365,6 +384,7 @@ def main():
 
     manager = DataManager()
     plotter = ChartPlotter()
+    generator = TableGenerator()
     statistic_provider = StatisticProvider()
 
     dataset = manager.load_data()
@@ -390,8 +410,7 @@ def main():
         plotter.plot_chart(testing_set, actual_values, predicted_values, counter)
         # plotter.plot_chart_online(testing_set, actual_values, predicted_values, counter)
 
-        latex_table = statistic_provider.generate_latex_table(actual_values, predicted_values)
-        statistic_provider.write_table_to_file(latex_table, counter)
+        generator.make_latex_table(actual_values, predicted_values, counter)
 
         accuracy = statistic_provider.count_mean_absolute_percentage_error(actual_values, predicted_values)
         scores.append(accuracy)
