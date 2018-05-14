@@ -262,7 +262,7 @@ class StatisticProvider(object):
     @staticmethod
     def count_mean_absolute_percentage_error(actual_values, predicted_values):
         actual_values, predicted_values = np.array(actual_values), np.array(predicted_values)
-        return np.mean(np.abs((actual_values - predicted_values) / actual_values)) * 100
+        return np.mean(np.abs((actual_values - predicted_values) / actual_values) * 100)
 
     @staticmethod
     def print_differences_between_values(actual, predicted, fold_number):
@@ -278,7 +278,13 @@ class StatisticProvider(object):
 
         for i in range(len(scores)):
             print('  Fold {:<2}: {:.2f}%'.format(i + 1, scores[i]))
-        print('Mean accuracy: {:.2f}%'.format(100 - sum(scores) / float(len(scores))))
+
+        print('\nPrediction accuracy:')
+
+        for i in range(len(scores)):
+            print('  Fold {:<2}: {:.2f}%'.format(i + 1, 100 - scores[i]))
+
+        print('\nMean accuracy: {:.2f}%'.format(100 - sum(scores) / float(len(scores))))
 
 
 class TableGenerator(object):
