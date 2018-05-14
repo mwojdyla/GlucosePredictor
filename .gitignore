@@ -10,3 +10,6 @@ images/
 #ignore latex_tables directory
 latex_tables/
 
+#ignore .idea directory
+.idea/
+
