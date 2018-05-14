@@ -257,12 +257,21 @@ class ChartPlotter(object):
 class StatisticProvider(object):
 
     def __init__(self):
-        pass
+        self.mape = 0.0
+        self.accuracy = 0.0
 
-    @staticmethod
-    def count_mean_absolute_percentage_error(actual_values, predicted_values):
+    def __getitem__(self, statistic):
+        if statistic == 'error':
+            return self.mape
+        elif statistic == 'accuracy':
+            return self.accuracy
+        else:
+            raise KeyError('Unknown statistic: {}'.format(statistic))
+
+    def count_prediction_accuracy(self, actual_values, predicted_values):
         actual_values, predicted_values = np.array(actual_values), np.array(predicted_values)
-        return np.mean(np.abs((actual_values - predicted_values) / actual_values) * 100)
+        self.mape = np.mean(np.abs((actual_values - predicted_values) / actual_values) * 100)
+        self.accuracy = 100 - self.mape
 
     @staticmethod
     def print_differences_between_values(actual, predicted, fold_number):
@@ -309,13 +318,24 @@ class TableGenerator(object):
 
     def make_latex_table(self, actual_values, predicted_values, fold_number):
         content = self.generate_tabular_content(actual_values, predicted_values)
-        self.latex_table_template = self.latex_table_template.replace('tabular_content', content)
-        self.write_table_to_file(fold_number)
+        modified_table = self.latex_table_template.replace('tabular_content', content)
+        self.write_table_to_file(modified_table, fold_number)
 
-    def write_table_to_file(self, fold_number):
+    def make_final_statistic_table(self, statistic_dict):
+        latex_tabular = tabulate(
+            statistic_dict,
+            headers='keys',
+            tablefmt='latex',
+            numalign='center'
+        )
+        modified_table = self.latex_table_template.replace('tabular_content', latex_tabular)
+        print(modified_table)
+        # self.write_table_to_file(modified_table, fold_number)
+
+    def write_table_to_file(self, table, fold_number):
         file_name = '{0}/table{1}.txt'.format(self.latex_tables_dir, fold_number)
         with open(file_name, 'w') as txt_file:
-            txt_file.write(self.latex_table_template)
+            txt_file.write(table)
 
     @staticmethod
     def generate_tabular_content(actual_values, predicted_values):
@@ -372,6 +392,13 @@ def create_option_parser():
                         type=int,
                         default=2000,
                         help='limit of samples used for the algorithm')
+    parser.add_argument('-I', '--iterations',
+                        type=int,
+                        default=1,
+                        help='number of whole algorithm\'s iterations')
+    parser.add_argument('--online_plotting',
+                        action='store_true',
+                        help='enable using plotly in online mode')
     return parser
 
 
@@ -383,10 +410,12 @@ def main():
 
     rows = arguments.rows
     columns = arguments.columns
-    data_limit = arguments.data_limit
-    folds_number = arguments.folds
     epochs = arguments.epochs
     initial_learning_rate = arguments.learning_rate
+    folds_number = arguments.folds
+    data_limit = arguments.data_limit
+    iterations = arguments.iterations
+    enable_online_plotting = arguments.online_plotting
 
     manager = DataManager()
     plotter = ChartPlotter()
@@ -397,32 +426,49 @@ def main():
     dataset = dataset[:data_limit]
 
     folds = manager.cross_validate_data(dataset, folds_number)
-    scores = list()
-    counter = 1
 
-    for fold in folds:
-        training_set = list(folds)
-        training_set.remove(fold)
-        training_set = sum(training_set, [])
-        testing_set = fold
+    comprehensive_stats = \
+    {
+        'Numer uruchomienia': [],
+        'Blad [%]': [],
+        'Dokladnosc predykcji [%]': []
+    }
+    for iteration in range(iterations):
+        comprehensive_stats['Numer uruchomienia'].append(iteration + 1)
+        accuracy_list = list()
+        error_list = list()
+        counter = 1
 
-        network = KohonenNetwork(rows, columns)
-        network.train(training_set, epochs, initial_learning_rate)
+        for fold in folds:
+            training_set = list(folds)
+            training_set.remove(fold)
+            training_set = sum(training_set, [])
+            testing_set = fold
 
-        actual_values = [record['sugar'] for record in testing_set]
-        predicted_values = network.predict(testing_set)
-        statistic_provider.print_differences_between_values(actual_values, predicted_values, counter)
+            network = KohonenNetwork(rows, columns)
+            network.train(training_set, epochs, initial_learning_rate)
 
-        plotter.plot_chart(testing_set, actual_values, predicted_values, counter)
-        # plotter.plot_chart_online(testing_set, actual_values, predicted_values, counter)
+            actual_values = [record['sugar'] for record in testing_set]
+            predicted_values = network.predict(testing_set)
+            statistic_provider.print_differences_between_values(actual_values, predicted_values, counter)
 
-        generator.make_latex_table(actual_values, predicted_values, counter)
+            if enable_online_plotting:
+                plotter.plot_chart_online(testing_set, actual_values, predicted_values, counter)
+            else:
+                plotter.plot_chart(testing_set, actual_values, predicted_values, counter)
 
-        accuracy = statistic_provider.count_mean_absolute_percentage_error(actual_values, predicted_values)
-        scores.append(accuracy)
-        counter += 1
+            generator.make_latex_table(actual_values, predicted_values, counter)
 
-    statistic_provider.print_statistics(scores)
+            statistic_provider.count_prediction_accuracy(actual_values, predicted_values)
+            accuracy_list.append(statistic_provider['accuracy'])
+            error_list.append(statistic_provider['error'])
+            counter += 1
+
+        statistic_provider.print_statistics(accuracy_list)
+        comprehensive_stats['Blad [%]'].append(error_list[0])  # Ugly hack
+        comprehensive_stats['Dokladnosc predykcji [%]'].append((accuracy_list[0]))  # Ugly hack
+
+    generator.make_final_statistic_table(comprehensive_stats)
 
 
 if __name__ == '__main__':
