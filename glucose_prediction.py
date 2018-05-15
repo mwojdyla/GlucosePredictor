@@ -192,10 +192,14 @@ class ChartPlotter(object):
         self.clean_plots_directory()
 
     def clean_plots_directory(self):
-        file_list = [file for file in os.listdir(self.plots_dir) if file.endswith('.html')]
+        plots_list = [file for file in os.listdir(self.plots_dir) if file.endswith('.html')]
+        images_list = [file for file in os.listdir(self.images_dir) if file.endswith('.png')]
 
-        for file in file_list:
+        for file in plots_list:
             os.remove(os.path.join(self.plots_dir, file))
+
+        for file in images_list:
+            os.remove(os.path.join(self.images_dir, file))
 
     def plot_chart(self, data_fold, actual_values, predicted_values, plot_number):
         traces = self.make_traces(data_fold, actual_values, predicted_values)
@@ -216,7 +220,7 @@ class ChartPlotter(object):
         continuous_trace = go.Scatter(
             x=dates,
             y=actual_values,
-            name='Actual value',
+            name='Rzeczywiste wartości',
             line=dict(
                 color='rgb(205, 12, 24)',
                 width=4)
@@ -224,7 +228,7 @@ class ChartPlotter(object):
         dotted_trace = go.Scatter(
             x=dates,
             y=predicted_values,
-            name='Predicted value',
+            name='Predykowane wartości',
             line=dict(
                 color='rgb(22, 96, 167)',
                 width=4,
@@ -235,9 +239,9 @@ class ChartPlotter(object):
     @staticmethod
     def make_layout_for_online_plotting(plot_number):
         return go.Layout(
-            title='Prediction of blood sugar level\n(Fold {})'.format(plot_number),
-            xaxis=dict(title='Date'),
-            yaxis=dict(title='Blood sugar level [mg/dL]'),
+            title='Predykcja poziomu cukru we krwi\n(Podzbiór {})'.format(plot_number),
+            xaxis=dict(title='Data pomiaru'),
+            yaxis=dict(title='Poziom cukru we krwi [mg/dL]'),
             autosize=False,
             width=1500,
             height=600,
@@ -247,9 +251,9 @@ class ChartPlotter(object):
     @staticmethod
     def make_layout_for_offline_plotting(plot_number):
         return dict(
-            title='Prediction of blood sugar level\n(Fold {})'.format(plot_number),
-            xaxis=dict(title='Date'),
-            yaxis=dict(title='Blood sugar level [mg/dL]'),
+            title='Predykcja poziomu cukru we krwi\n(Podzbiór {})'.format(plot_number),
+            xaxis=dict(title='Data pomiaru'),
+            yaxis=dict(title='Poziom cukru we krwi [mg/dL]'),
             legend=dict(font=dict(size=14))
         )
 
@@ -293,10 +297,10 @@ class TableGenerator(object):
         self.latex_tables_dir = '{}/latex_tables'.format(os.path.abspath(os.path.dirname(__file__)))
         self.latex_table_template = \
             '''
-            \\begin{table}[]
+            \\begin{table}[hb]
             \centering
             tabular_content
-            \caption{My caption}
+            \caption{Tabela wyników eksperymentu nr }
             \end{table}
             '''
         self.clean_latex_tables_directory()
@@ -319,16 +323,22 @@ class TableGenerator(object):
 
     @staticmethod
     def generate_tabular_content(actual_values, predicted_values):
-        actual_val_key = 'Actual values [mg/dL]'
-        predicted_val_key = 'Predicted values [mg/dL]'
-        sample_num_key = 'Sample number'
+        actual_val_key = 'Aw [mg/dL]'
+        actual_val_key2 = 'Aw2 [mg/dL]'
+        predicted_val_key = 'Pw [mg/dL]'
+        predicted_val_key2 = 'Pw2 [mg/dL]'
+        sample_num_key = 'Lp.'
+        sample_num_key2 = 'Lp2.'
         sample_numbers = list(range(1, len(actual_values) + 1))
 
         latex_tabular = tabulate(
             {
-                sample_num_key: sample_numbers,
-                actual_val_key: actual_values,
-                predicted_val_key: predicted_values
+                sample_num_key: sample_numbers[:len(sample_numbers) // 2],
+                actual_val_key: actual_values[:len(actual_values) // 2],
+                predicted_val_key: predicted_values[:len(predicted_values) // 2],
+                sample_num_key2: sample_numbers[len(sample_numbers) // 2:],
+                actual_val_key2: actual_values[len(actual_values) // 2:],
+                predicted_val_key2: predicted_values[len(predicted_values) // 2:]
             },
             headers='keys',
             tablefmt='latex',
@@ -338,11 +348,25 @@ class TableGenerator(object):
 
     @staticmethod
     def modify_table_content(latex_table):
-        modified_table = latex_table.replace('ccc', '|c|c|c|')
-        modified_table = modified_table.replace('Actual values [mg/dL]', '\\textbf{Actual values [mg/dL]}')
-        modified_table = modified_table.replace('Predicted values [mg/dL]', '\\textbf{Predicted values [mg/dL]}')
-        modified_table = modified_table.replace('Sample number', '\\textbf{Sample number}')
+        av_key = 'Aw [mg/dL]'
+        av2_key = 'Aw2 [mg/dL]'
+        pv_key = 'Pw [mg/dL]'
+        pv2_key = 'Pw2 [mg/dL]'
+        sn_key = 'Lp.'
+        sn2_key = 'Lp2.'
+
+        modified_table = latex_table.replace('cccccc', '|c|c|c|c|c|c|')
+        modified_table = modified_table.replace(av_key, TableGenerator.textbf(av_key))
+        modified_table = modified_table.replace(av2_key, TableGenerator.textbf(av_key))
+        modified_table = modified_table.replace(pv_key, TableGenerator.textbf(pv_key))
+        modified_table = modified_table.replace(pv2_key, TableGenerator.textbf(pv_key))
+        modified_table = modified_table.replace(sn_key, TableGenerator.textbf(sn_key))
+        modified_table = modified_table.replace(sn2_key, TableGenerator.textbf(sn_key))
         return modified_table
+
+    @staticmethod
+    def textbf(text):
+        return '\\textbf{{{0}}}'.format(text)
 
 
 def create_option_parser():
