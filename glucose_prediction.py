@@ -372,6 +372,9 @@ def create_option_parser():
                         type=int,
                         default=2000,
                         help='limit of samples used for the algorithm')
+    parser.add_argument('--online_plotting',
+                        action='store_true',
+                        help='enable using plotly in online mode')
     return parser
 
 
@@ -383,10 +386,11 @@ def main():
 
     rows = arguments.rows
     columns = arguments.columns
-    data_limit = arguments.data_limit
-    folds_number = arguments.folds
     epochs = arguments.epochs
     initial_learning_rate = arguments.learning_rate
+    folds_number = arguments.folds
+    data_limit = arguments.data_limit
+    enable_online_plotting = arguments.online_plotting
 
     manager = DataManager()
     plotter = ChartPlotter()
@@ -413,8 +417,10 @@ def main():
         predicted_values = network.predict(testing_set)
         statistic_provider.print_differences_between_values(actual_values, predicted_values, counter)
 
-        plotter.plot_chart(testing_set, actual_values, predicted_values, counter)
-        # plotter.plot_chart_online(testing_set, actual_values, predicted_values, counter)
+        if enable_online_plotting:
+            plotter.plot_chart_online(testing_set, actual_values, predicted_values, counter)
+        else:
+            plotter.plot_chart(testing_set, actual_values, predicted_values, counter)
 
         generator.make_latex_table(actual_values, predicted_values, counter)
 
